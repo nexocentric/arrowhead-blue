@@ -8,4 +8,6 @@
 
 #customizations
 !.arrowhead-blue
-!.arrowhead-blue/*
+!.arrowhead-blue/aliases
+!.arrowhead-blue/functions
+!.arrowhead-blue/w5h

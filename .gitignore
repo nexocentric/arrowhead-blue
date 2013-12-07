@@ -1,3 +1,11 @@
 *
 !.gitignore
 !README.md
+
+#bash settings
+!.bash_profile
+!.bashrc
+
+#customizations
+!.arrowhead-blue
+!.arrowhead-blue/*

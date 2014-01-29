@@ -131,3 +131,16 @@ export LANGUAGE=en_US.UTF-8
 export LANG=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #end added by Dodzi Dzakuma
+
+internet.createGitHubRepositiory()
+{
+	local githubUsername=$1
+	local repositoryName=$2
+
+	if [[ $# -lt 2 ]]; then
+		printf "You have to give both a username and repository name\n"
+	fi
+
+	curl -u '$githubUsername' https://api.github.com/user/repos \
+		-d '{"name":"$repositoryName"}'
+}

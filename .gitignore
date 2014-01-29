@@ -5,6 +5,8 @@
 #bash settings
 !.bash_profile
 !.bashrc
+!.tmux.conf
+!*structure*
 
 #customizations
 !.arrowhead-blue

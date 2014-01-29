@@ -1,0 +1,659 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"termi",
+				"terminus-settings"
+			],
+			[
+				"ter",
+				"terminusInstalled"
+			],
+			[
+				"bash",
+				"bash_profile"
+			],
+			[
+				"bas",
+				"bashProfileText"
+			],
+			[
+				"ba",
+				"bash_profile"
+			],
+			[
+				"dei",
+				"displayOperatingSystemInformation"
+			],
+			[
+				"S",
+				"SETUP_FILE_DIRECTORY"
+			],
+			[
+				"func",
+				"func_num_args"
+			],
+			[
+				"con",
+				"continue"
+			],
+			[
+				"all",
+				"allOperators"
+			],
+			[
+				"NOT",
+				"NOT_LIKE"
+			],
+			[
+				"LE",
+				"LESS_EQUAL"
+			],
+			[
+				"GREA",
+				"GREATER_EQUAL"
+			],
+			[
+				"NOT_",
+				"NOT_NON_STANDARD"
+			],
+			[
+				"E",
+				"EQUAL"
+			],
+			[
+				"Sq",
+				"SqlColumn"
+			],
+			[
+				"where",
+				"whereClause"
+			],
+			[
+				"addi",
+				"additionalWhereClauses"
+			],
+			[
+				"func_",
+				"func_get_args"
+			],
+			[
+				"fla",
+				"flattenArray"
+			],
+			[
+				"is_a",
+				"is_array"
+			],
+			[
+				"flatt",
+				"flattenedArray"
+			],
+			[
+				"for",
+				"foreach	foreach …"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "README.md",
+			"settings":
+			{
+				"buffer_size": 278,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "configure.sh",
+			"settings":
+			{
+				"buffer_size": 4248,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"contents": "#!/bin/bash -u\n\n#include debugging-tools.sh\n#source debugging-tools.sh\n\n\n\n# traptest.sh\n\ntrap \"echo Booh!\" SIGINT SIGTERM\necho \"pid is $$\"\n\nwhile :     # This is the same as \"while true\".\ndo\n        sleep 60  # This script is not really doing anything.\ndone\n\n#script constants\n#outputDebugInfo \"setup all constants\"\n#PS1_OPTIONS=$(ls ps1)\n# FUNCTION_OPTIONS=$(ls functions)\n#ALIAS_OPTIONS=$(ls aliases)\n#NANO_OPTIONS=$(ls nano)\n#W5H_OPTIONS=$(ls w5h)\n\n# for i in \"${FUNCTION_OPTIONS[@]}\"\n# do\n#   echo $i\n# done\n\n\n# #script variables\n# outputDebugInfo \"initialize all variables\"\n# optionCount=\n# nextOption=\n# userInput=\n\n# #this function evaluates user yes no choices\n# function evaluateBinaryChoice {\n#   #$1 = the user's choice\n#   select $1 in \"YES\" \"NO\" \"Yes\" \"No\" \"yes\" \"no\" \"Y\" \"N\" \"y\" \"n\"; do\n#       case $1 in\n#           [yY] | [yY][Ee][Ss] ) userInput=1; break;;\n#           [nN] | [n|N][O|o] ) userInput=0; exit;;\n#       esac\n#   done\n# }\n\n# #this turns pairs of options into multiple\n# #choice case switches\n# function evaluateMultipleChoice {\n# }\n\n# #this fuction is used to get user input displays message too\n# function getUserInput {\n#   #$1 = a message to display to the user\n#   read -p $1 userInput\n# }\n\n# function getUserInputBinary {\n#   getUserInput $1\n#   if [ -z userInput ]; then\n#     echo \"No options selected\"\n#     reutrn 1;\n#   fi\n#   evaluateBinaryChoice userInput\n# }\n\n# #cycle through all the lists and add options as the user sees fit\n# outputDebugInfo \"getting ready to go through all options\"\n# for optionList in $PS1_OPTIONS $FUNCTION_OPTIONS $ALIAS_OPTIONS $NANO_OPTIONS $W5H_OPTIONS\n# do\n#   outputDebugInfo \"count all options in a a set list\"\n#   optionCount=${#optionList[@]}\n#   for (( nextOption=0; nextOption<optionCount; nextOption++ ))\n#   do\n#     getUserInput \"Include ${optionList[nextOption]} ?\"\n#     if [ userInput -eq 1 ]; then\n#       echo ${optionList[nextOption]} >> .bash_profile\n#       echo \"Option added\"\n#     fi\n#   done\n# done\n\n# echo \"Terminus configured! Good luck programming!\"\n",
+			"file": "setup.sh",
+			"file_size": 2047,
+			"file_write_time": 130215708684845598,
+			"settings":
+			{
+				"buffer_size": 2047,
+				"line_ending": "Unix",
+				"name": "#just a setup file"
+			}
+		},
+		{
+			"file": "command-monitor.sh",
+			"settings":
+			{
+				"buffer_size": 12,
+				"line_ending": "Windows",
+				"name": "#!/bin/bash"
+			}
+		},
+		{
+			"file": "terminus-settings",
+			"settings":
+			{
+				"buffer_size": 2430,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/W/nexocentric-studios-boilerplate/directoryMonitory.js",
+			"settings":
+			{
+				"buffer_size": 941,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "debugging-tools.sh",
+			"settings":
+			{
+				"buffer_size": 174,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"command_palette":
+	{
+		"height": 196.0,
+		"selected_items":
+		[
+			[
+				"synht",
+				"Set Syntax: HTML"
+			],
+			[
+				"syba",
+				"Set Syntax: Shell Script (Bash)"
+			],
+			[
+				"syphp",
+				"Set Syntax: PHP"
+			],
+			[
+				"synba",
+				"Set Syntax: Shell Script (Bash)"
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"sy ba",
+				"Set Syntax: Shell Script (Bash)"
+			],
+			[
+				"snip",
+				"Snippet: if … fi"
+			],
+			[
+				"sy m",
+				"Set Syntax: Markdown"
+			],
+			[
+				"sy bas",
+				"Set Syntax: Shell Script (Bash)"
+			],
+			[
+				"snippet",
+				"Snippet: define(…, …)"
+			],
+			[
+				"snippet do",
+				"Snippet: Start Docblock"
+			],
+			[
+				"pacin",
+				"Package Control: Install Package"
+			],
+			[
+				"men",
+				"View: Toggle Menu"
+			],
+			[
+				"view",
+				"View: Toggle Menu"
+			],
+			[
+				"con",
+				"Convert Case: Lower Case"
+			],
+			[
+				"php",
+				"Set Syntax: PHP"
+			],
+			[
+				"syn ph",
+				"Set Syntax: PHP"
+			],
+			[
+				"p",
+				"Package Control: Install Package"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"pack i",
+				"Package Control: Install Package"
+			],
+			[
+				"pa",
+				"Package Control: Install Package"
+			],
+			[
+				"pac",
+				"Package Control: Install Package"
+			],
+			[
+				"Package Control: ",
+				"Package Control: Discover Packages"
+			]
+		],
+		"width": 400.0
+	},
+	"console":
+	{
+		"height": 126.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/W/nexocentric_studios.ppw",
+		"/W/terminus/terminus-settings.php",
+		"/W/terminus/functions/reloadShell.sh",
+		"/W/sql_interface/SqlInterface.php",
+		"/W/sql_interface/tests/SqlTableTest.php",
+		"/C/Users/nexocentric/AppData/Roaming/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/C/Users/nexocentric/AppData/Roaming/Sublime Text 3/Packages/Default/Preferences.sublime-settings"
+	],
+	"find":
+	{
+		"height": 34.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"></script>",
+			"broilerplate",
+			"bashProfileText",
+			"lowercase",
+			"    ",
+			"echo",
+			"alterStatement",
+			" $",
+			"addColumns",
+			"$alterStatement",
+			"$my",
+			"if",
+			"IF",
+			"if",
+			"SQL::",
+			"const",
+			"where(",
+			"resetResultSet",
+			"alter",
+			"altr",
+			"database",
+			"safety",
+			"want"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 4,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "README.md",
+					"settings":
+					{
+						"buffer_size": 278,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"is_preview": true,
+							"syntax": "Packages/Markdown/Markdown.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "configure.sh",
+					"settings":
+					{
+						"buffer_size": 4248,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3009,
+								3009
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 488.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "setup.sh",
+					"settings":
+					{
+						"buffer_size": 2047,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								252,
+								252
+							]
+						],
+						"settings":
+						{
+							"auto_name": "#just a setup file",
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "command-monitor.sh",
+					"settings":
+					{
+						"buffer_size": 12,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12,
+								12
+							]
+						],
+						"settings":
+						{
+							"auto_name": "#!/bin/bash",
+							"is_preview": true,
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "terminus-settings",
+					"settings":
+					{
+						"buffer_size": 2430,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1856,
+								1856
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 825.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "/W/nexocentric-studios-boilerplate/directoryMonitory.js",
+					"settings":
+					{
+						"buffer_size": 941,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								462,
+								462
+							]
+						],
+						"settings":
+						{
+							"origin_encoding": "ASCII",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "debugging-tools.sh",
+					"settings":
+					{
+						"buffer_size": 174,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								59,
+								74
+							]
+						],
+						"settings":
+						{
+							"auto_name": "",
+							"is_preview": true,
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 34.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"replace":
+	{
+		"height": 38.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"ba",
+				"#!/bin/bahs"
+			],
+			[
+				"se",
+				"/W/terminus/setup.sh"
+			],
+			[
+				"c",
+				"/W/terminus/configure.sh"
+			],
+			[
+				"s",
+				"/W/terminus/ginko/setup.sh"
+			],
+			[
+				"d",
+				"/W/terminus/debugging-tools.sh"
+			],
+			[
+				"co",
+				"/W/terminus/configure.sh"
+			],
+			[
+				"de",
+				"/W/terminus/debugging-tools.sh"
+			],
+			[
+				"con",
+				"/W/terminus/configure.sh"
+			],
+			[
+				"",
+				"#!"
+			],
+			[
+				"re",
+				"/W/terminus/README.md"
+			],
+			[
+				".php",
+				"/W/sql_interface/tests/SqlTableTest.php"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"show_minimap": true,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 150.0,
+	"status_bar_visible": true
+}

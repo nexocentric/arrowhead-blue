@@ -1,0 +1,97 @@
+|-repository
+| |-commit
+| |-update
+| |-deleteFile
+| |-addFile
+| |-removeTag
+| |-createTag
+| |-status
+| |-
+| |-
+| |-
+|-service
+| |-samba
+| | |-configuration
+| | |-restart
+| | |-stop
+| | |-
+| | |-
+| | |-
+| | |-
+| |-webserver
+| | |-configuration
+| | |-restart
+| | |-stop
+| | |-
+| | |-
+| | |-
+| |-mysql
+| | |-configuration
+| | |-restart
+| | |-stop
+| | |-
+| | |-
+| | |-
+| |-php
+| | |-configuration
+| | |-restart
+| | |-stop
+| | |-
+| | |-
+| | |-
+| |-
+|-shell
+| |-reload
+| |-autoInstallDependency
+| |-notify
+| |-errorCommand
+| |-
+| |-
+|-file
+| |-extract
+| |-search
+| |-searchReplace
+| |-
+|-process
+| |-kill/destroy
+| |-footprint
+| |-spawn
+| |-debug
+| |-
+| |-
+|-search
+| |-file
+| |-folder
+| |-web
+| |-process
+|-ssh
+| |-createPair (RSA)
+| |-copyPublicKey
+| |-command
+| |-copy
+| |-
+| |-
+| |-
+| |-
+| |-
+| |-
+|-terminal
+| |-detach
+| |-attach
+| |-move
+| |-
+|-package
+| |-search
+| |-install
+| |-uninstall
+| |-reconfigure
+| |-purge
+| |-
+|-system
+| |-info
+| |-update
+| |-restart
+| |-
+| |-
+| |-
+|-

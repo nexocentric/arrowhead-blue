@@ -1,0 +1,758 @@
+GIT_PS1_SHOWDIRTYSTATE=1
+GIT_PS1_SHOWSTASHSTATE=1
+
+__git_printf_supports_v=
+printf -v __git_printf_supports_v -- '%s' yes >/dev/null 2>&1
+
+# stores the divergence from upstream in $p
+# used by GIT_PS1_SHOWUPSTREAM
+__git_ps1_show_upstream ()
+{
+        local key value
+        local svn_remote svn_url_pattern count n
+        local upstream=git legacy="" verbose="" name=""
+
+        svn_remote=()
+        # get some config options from git-config
+        local output="$(git config -z --get-regexp '^(svn-remote\..*\.url|bash\.showupstream)$' 2>/dev/null | tr '\0\n' '\n ')"
+        while read -r key value; do
+                case "$key" in
+                bash.showupstream)
+                        GIT_PS1_SHOWUPSTREAM="$value"
+                        if [[ -z "${GIT_PS1_SHOWUPSTREAM}" ]]; then
+                                p=""
+                                return
+                        fi
+                        ;;
+                svn-remote.*.url)
+                        svn_remote[$((${#svn_remote[@]} + 1))]="$value"
+                        svn_url_pattern="$svn_url_pattern\\|$value"
+                        upstream=svn+git # default upstream is SVN if available, else git
+                        ;;
+                esac
+        done <<< "$output"
+
+        # parse configuration values
+        for option in ${GIT_PS1_SHOWUPSTREAM}; do
+                case "$option" in
+                git|svn) upstream="$option" ;;
+                verbose) verbose=1 ;;
+                legacy)  legacy=1  ;;
+                name)    name=1 ;;
+                esac
+        done
+
+        # Find our upstream
+        case "$upstream" in
+        git)    upstream="@{upstream}" ;;
+        svn*)
+                # get the upstream from the "git-svn-id: ..." in a commit message
+                # (git-svn uses essentially the same procedure internally)
+                local -a svn_upstream
+                svn_upstream=($(git log --first-parent -1 \
+                                        --grep="^git-svn-id: \(${svn_url_pattern#??}\)" 2>/dev/null))
+                if [[ 0 -ne ${#svn_upstream[@]} ]]; then
+                        svn_upstream=${svn_upstream[${#svn_upstream[@]} - 2]}
+                        svn_upstream=${svn_upstream%@*}
+                        local n_stop="${#svn_remote[@]}"
+                        for ((n=1; n <= n_stop; n++)); do
+                                svn_upstream=${svn_upstream#${svn_remote[$n]}}
+                        done
+
+                        if [[ -z "$svn_upstream" ]]; then
+                                # default branch name for checkouts with no layout:
+                                upstream=${GIT_SVN_ID:-git-svn}
+                        else
+                                upstream=${svn_upstream#/}
+                        fi
+                elif [[ "svn+git" = "$upstream" ]]; then
+                        upstream="@{upstream}"
+                fi
+                ;;
+        esac
+
+        # Find how many commits we are ahead/behind our upstream
+        if [[ -z "$legacy" ]]; then
+                count="$(git rev-list --count --left-right \
+                                "$upstream"...HEAD 2>/dev/null)"
+        else
+                # produce equivalent output to --count for older versions of git
+                local commits
+                if commits="$(git rev-list --left-right "$upstream"...HEAD 2>/dev/null)"
+                then
+                        local commit behind=0 ahead=0
+                        for commit in $commits
+                        do
+                                case "$commit" in
+                                "<"*) ((behind++)) ;;
+                                *)    ((ahead++))  ;;
+                                esac
+                        done
+                        count="$behind        $ahead"
+                else
+                        count=""
+                fi
+        fi
+
+        # calculate the result
+        if [[ -z "$verbose" ]]; then
+                case "$count" in
+                "") # no upstream
+                        p="" ;;
+                "0        0") # equal to upstream
+                        p="=" ;;
+                "0        "*) # ahead of upstream
+                        p=">" ;;
+                *"        0") # behind upstream
+                        p="<" ;;
+                *)            # diverged from upstream
+                        p="<>" ;;
+                esac
+        else
+                case "$count" in
+                "") # no upstream
+                        p="" ;;
+                "0        0") # equal to upstream
+                        p=" u=" ;;
+                "0        "*) # ahead of upstream
+                        p=" u+${count#0        }" ;;
+                *"        0") # behind upstream
+                        p=" u-${count%        0}" ;;
+                *)            # diverged from upstream
+                        p=" u+${count#*        }-${count%        *}" ;;
+                esac
+                if [[ -n "$count" && -n "$name" ]]; then
+                        p="$p $(git rev-parse --abbrev-ref "$upstream" 2>/dev/null)"
+                fi
+        fi
+
+}
+
+# Helper function that is meant to be called from __git_ps1.  It
+# injects color codes into the appropriate gitstring variables used
+# to build a gitstring.
+__git_ps1_colorize_gitstring ()
+{
+        if [[ -n ${ZSH_VERSION-} ]]; then
+                local c_red='%F{red}'
+                local c_green='%F{green}'
+                local c_lblue='%F{blue}'
+                local c_clear='%f'
+        else
+                # Using \[ and \] around colors is necessary to prevent
+                # issues with command line editing/browsing/completion!
+                local c_red='\[\e[31m\]'
+                local c_green='\[\e[32m\]'
+                local c_lblue='\[\e[1;34m\]'
+                local c_clear='\[\e[0m\]'
+        fi
+        local bad_color=$c_red
+        local ok_color=$c_green
+        local flags_color="$c_lblue"
+
+        local branch_color=""
+        if [ $detached = no ]; then
+                branch_color="$ok_color"
+        else
+                branch_color="$bad_color"
+        fi
+        c="$branch_color$c"
+
+        z="$c_clear$z"
+        if [ "$w" = "*" ]; then
+                w="$bad_color$w"
+        fi
+        if [ -n "$i" ]; then
+                i="$ok_color$i"
+        fi
+        if [ -n "$s" ]; then
+                s="$flags_color$s"
+        fi
+        if [ -n "$u" ]; then
+                u="$bad_color$u"
+        fi
+        r="$c_clear$r"
+}
+
+# __git_ps1 accepts 0 or 1 arguments (i.e., format string)
+# when called from PS1 using command substitution
+# in this mode it prints text to add to bash PS1 prompt (includes branch name)
+#
+# __git_ps1 requires 2 or 3 arguments when called from PROMPT_COMMAND (pc)
+# in that case it _sets_ PS1. The arguments are parts of a PS1 string.
+# when two arguments are given, the first is prepended and the second appended
+# to the state string when assigned to PS1.
+# The optional third parameter will be used as printf format string to further
+# customize the output of the git-status string.
+# In this mode you can request colored hints using GIT_PS1_SHOWCOLORHINTS=true
+__git_ps1 ()
+{
+        local pcmode=no
+        local detached=no
+        local ps1pc_start='\u@\h:\w '
+        local ps1pc_end='\$ '
+        local printf_format=' (%s)'
+
+        case "$#" in
+                2|3)        pcmode=yes
+                        ps1pc_start="$1"
+                        ps1pc_end="$2"
+                        printf_format="${3:-$printf_format}"
+                ;;
+                0|1)        printf_format="${1:-$printf_format}"
+                ;;
+                *)        return
+                ;;
+        esac
+
+        local repo_info rev_parse_exit_code
+        repo_info="$(git rev-parse --git-dir --is-inside-git-dir \
+                --is-bare-repository --is-inside-work-tree \
+                --short HEAD 2>/dev/null)"
+        rev_parse_exit_code="$?"
+
+        if [ -z "$repo_info" ]; then
+                if [ $pcmode = yes ]; then
+                        #In PC mode PS1 always needs to be set
+                        PS1="$ps1pc_start$ps1pc_end"
+                fi
+                return
+        fi
+
+        local short_sha
+        if [ "$rev_parse_exit_code" = "0" ]; then
+                short_sha="${repo_info##*$'\n'}"
+                repo_info="${repo_info%$'\n'*}"
+        fi
+        local inside_worktree="${repo_info##*$'\n'}"
+        repo_info="${repo_info%$'\n'*}"
+        local bare_repo="${repo_info##*$'\n'}"
+        repo_info="${repo_info%$'\n'*}"
+        local inside_gitdir="${repo_info##*$'\n'}"
+        local g="${repo_info%$'\n'*}"
+
+        local r=""
+        local b=""
+        local step=""
+        local total=""
+        if [ -d "$g/rebase-merge" ]; then
+                read b 2>/dev/null <"$g/rebase-merge/head-name"
+                read step 2>/dev/null <"$g/rebase-merge/msgnum"
+                read total 2>/dev/null <"$g/rebase-merge/end"
+                if [ -f "$g/rebase-merge/interactive" ]; then
+                        r="|REBASE-i"
+                else
+                        r="|REBASE-m"
+                fi
+        else
+                if [ -d "$g/rebase-apply" ]; then
+                        read step 2>/dev/null <"$g/rebase-apply/next"
+                        read total 2>/dev/null <"$g/rebase-apply/last"
+                        if [ -f "$g/rebase-apply/rebasing" ]; then
+                                read b 2>/dev/null <"$g/rebase-apply/head-name"
+                                r="|REBASE"
+                        elif [ -f "$g/rebase-apply/applying" ]; then
+                                r="|AM"
+                        else
+                                r="|AM/REBASE"
+                        fi
+                elif [ -f "$g/MERGE_HEAD" ]; then
+                        r="|MERGING"
+                elif [ -f "$g/CHERRY_PICK_HEAD" ]; then
+                        r="|CHERRY-PICKING"
+                elif [ -f "$g/REVERT_HEAD" ]; then
+                        r="|REVERTING"
+                elif [ -f "$g/BISECT_LOG" ]; then
+                        r="|BISECTING"
+                fi
+
+                if [ -n "$b" ]; then
+                        :
+                elif [ -h "$g/HEAD" ]; then
+                        # symlink symbolic ref
+                        b="$(git symbolic-ref HEAD 2>/dev/null)"
+                else
+                        local head=""
+                        if ! read head 2>/dev/null <"$g/HEAD"; then
+                                if [ $pcmode = yes ]; then
+                                        PS1="$ps1pc_start$ps1pc_end"
+                                fi
+                                return
+                        fi
+                        # is it a symbolic ref?
+                        b="${head#ref: }"
+                        if [ "$head" = "$b" ]; then
+                                detached=yes
+                                b="$(
+                                case "${GIT_PS1_DESCRIBE_STYLE-}" in
+                                (contains)
+                                        git describe --contains HEAD ;;
+                                (branch)
+                                        git describe --contains --all HEAD ;;
+                                (describe)
+                                        git describe HEAD ;;
+                                (* | default)
+                                        git describe --tags --exact-match HEAD ;;
+                                esac 2>/dev/null)" ||
+
+                                b="$short_sha..."
+                                b="($b)"
+                        fi
+                fi
+        fi
+
+        if [ -n "$step" ] && [ -n "$total" ]; then
+                r="$r $step/$total"
+        fi
+
+        local w=""
+        local i=""
+        local s=""
+        local u=""
+        local c=""
+        local p=""
+
+        if [ "true" = "$inside_gitdir" ]; then
+                if [ "true" = "$bare_repo" ]; then
+                        c="BARE:"
+                else
+                        b="GIT_DIR!"
+                fi
+        elif [ "true" = "$inside_worktree" ]; then
+                if [ -n "${GIT_PS1_SHOWDIRTYSTATE-}" ] &&
+                   [ "$(git config --bool bash.showDirtyState)" != "false" ]
+                then
+                        git diff --no-ext-diff --quiet --exit-code || w="*"
+                        if [ -n "$short_sha" ]; then
+                                git diff-index --cached --quiet HEAD -- || i="+"
+                        else
+                                i="#"
+                        fi
+                fi
+                if [ -n "${GIT_PS1_SHOWSTASHSTATE-}" ] &&
+                   [ -r "$g/refs/stash" ]; then
+                        s="$"
+                fi
+
+                if [ -n "${GIT_PS1_SHOWUNTRACKEDFILES-}" ] &&
+                   [ "$(git config --bool bash.showUntrackedFiles)" != "false" ] &&
+                   git ls-files --others --exclude-standard --error-unmatch -- '*' >/dev/null 2>/dev/null
+                then
+                        u="%${ZSH_VERSION+%}"
+                fi
+
+                if [ -n "${GIT_PS1_SHOWUPSTREAM-}" ]; then
+                        __git_ps1_show_upstream
+                fi
+        fi
+
+        local z="${GIT_PS1_STATESEPARATOR-" "}"
+
+        # NO color option unless in PROMPT_COMMAND mode
+        if [ $pcmode = yes ] && [ -n "${GIT_PS1_SHOWCOLORHINTS-}" ]; then
+                __git_ps1_colorize_gitstring
+        fi
+
+        local f="$w$i$s$u"
+        local gitstring="$c${b##refs/heads/}${f:+$z$f}$r$p"
+
+        if [ $pcmode = yes ]; then
+                if [ "${__git_printf_supports_v-}" != yes ]; then
+                        gitstring=$(printf -- "$printf_format" "$gitstring")
+                else
+                        printf -v gitstring -- "$printf_format" "$gitstring"
+                fi
+                PS1="$ps1pc_start$gitstring$ps1pc_end"
+        else
+                printf -- "$printf_format" "$gitstring"
+        fi
+}
+
+displayOperatingSystemInformation() {
+	OS=`lowercase \`uname\``
+	KERNEL=`uname -r`
+	MACH=`uname -m`
+
+	if [ "{$OS}" == "windowsnt" ]; then
+		OS=windows
+	elif [ "{$OS}" == "darwin" ]; then
+		OS=mac
+	else
+		OS=`uname`
+		if [ "${OS}" = "SunOS" ] ; then
+			OS=Solaris
+			ARCH=`uname -p`
+			OSSTR="${OS} ${REV}(${ARCH} `uname -v`)"
+		elif [ "${OS}" = "AIX" ] ; then
+			OSSTR="${OS} `oslevel` (`oslevel -r`)"
+		elif [ "${OS}" = "Linux" ] ; then
+			if [ -f /etc/redhat-release ] ; then
+				DistroBasedOn='RedHat'
+				DIST=`cat /etc/redhat-release |sed s/\ release.*//`
+				PSUEDONAME=`cat /etc/redhat-release | sed s/.*\(// | sed s/\)//`
+				REV=`cat /etc/redhat-release | sed s/.*release\ // | sed s/\ .*//`
+			elif [ -f /etc/SuSE-release ] ; then
+				DistroBasedOn='SuSe'
+				PSUEDONAME=`cat /etc/SuSE-release | tr "\n" ' '| sed s/VERSION.*//`
+				REV=`cat /etc/SuSE-release | tr "\n" ' ' | sed s/.*=\ //`
+			elif [ -f /etc/mandrake-release ] ; then
+				DistroBasedOn='Mandrake'
+				PSUEDONAME=`cat /etc/mandrake-release | sed s/.*\(// | sed s/\)//`
+				REV=`cat /etc/mandrake-release | sed s/.*release\ // | sed s/\ .*//`
+			elif [ -f /etc/debian_version ] ; then
+				DistroBasedOn='Debian'
+				DIST=`cat /etc/lsb-release | grep '^DISTRIB_ID' | awk -F=  '{ print $2 }'`
+				PSUEDONAME=`cat /etc/lsb-release | grep '^DISTRIB_CODENAME' | awk -F=  '{ print $2 }'`
+				REV=`cat /etc/lsb-release | grep '^DISTRIB_RELEASE' | awk -F=  '{ print $2 }'`
+			fi
+			if [ -f /etc/UnitedLinux-release ] ; then
+				DIST="${DIST}[`cat /etc/UnitedLinux-release | tr "\n" ' ' | sed s/VERSION.*//`]"
+			fi
+			OS=`lowercase $OS`
+			DistroBasedOn=`lowercase $DistroBasedOn`
+			# readonly OS
+			readonly DIST
+			readonly DistroBasedOn
+			readonly PSUEDONAME
+			# readonly REV
+			# readonly KERNEL
+			# readonly MACH
+		fi
+	fi
+	export $DistroBasedOn
+	export $DIST
+	export $PSUEDONAME
+}
+
+shell.reload() {
+	. ~/.bash_profile
+}
+
+webserver.restart() {
+	if [[ $DistroBasedOn -eq "Debian" ]]; then
+		sudo /etc/init.d/apache2 reload
+	elif [[ $DistroBasedOn -eq "RedHat" ]]; then
+		/etc/init.d/httpd reload
+	fi
+}
+
+webserver.stop() {
+	sudo /etc/init.d/apache2 stop
+}
+
+webserver.start() {
+	sudo /etc/init.d/apache2 start
+}
+
+file.search() {
+	grep -f
+}
+
+# file.compare() {
+
+# }
+
+
+# mysql.restart() {
+
+# }
+
+# mysql.stop() {
+
+# }
+
+# mysql.start() {
+
+# }
+
+packages.search() {
+	apt-cache search $1
+}
+
+packages.install() {
+	sudo apt-get install $1
+}
+
+# packages.remove() {
+
+# }
+ 
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+BOLD_BRIGHT_TEXT=1
+DIM_TEXT=2
+UNDERLINED_TEXT=4
+BLINKING_TEXT=5
+REVERSED_TEXT=6
+INVERTED_TEXT=8
+ 
+#
+export LEFT_START_END="+-"
+export LEFT_CONTINUE_PROMPT="|-"
+export RIGHT_START_END="-+"
+export RIGHT_CONTINUE_PROMPT="-|"
+ 
+# User specific aliases and functions
+checkFileUpdateStatus()
+{
+	local filePath=$1
+	local fileName=$(basename $filePath)
+	local lastUpdated=$(stat $filePath --format=%Y)
+
+	if [[ $lastUpdated -ne ${!fileName} ]]; then
+		${!fileName}=$(stat $filePath --format=%Y)
+		return 1
+	fi
+	return 0
+}
+
+shell.fullExport()
+{
+	export -f checkFileUpdateStatus
+	export -f formatText
+	export -f colorizeText
+	export -f colorizeBackground
+	export -f createPrompt
+	export -f shell.reload
+	export -f shell.messageTerminal
+	export -f displayCurrentPathInformation
+	export PROMPT_COMMAND=createPrompt
+}
+
+shell.messageTerminal()
+{
+	local message="$1"
+	local userName="$2"
+	local terminalList=
+	local terminalLocation=
+	local possibleTerminals=
+
+	#no message and or user specified
+	if [[ $# -lt 2 ]]; then
+		printf "Please specify a message and user name or device number.\n"
+		return 1
+	fi
+
+	#parse all users in this list
+	for user in "$@"; do
+		#this equals message, so make sure that you
+		#don't try to parse it
+		if [[ "${user}" = "${message}" ]]; then
+			continue
+		fi
+
+		if [[ $user =~ [^a-zA-Z] ]]; then
+			#statements
+			terminalLocation="${terminalLocation}/dev/pts/${user} "
+		else
+			possibleTerminals=$(who | grep $user)
+			#no double quotes on the terminal function because
+			#you have to let space splitting do it's work
+			for terminalNumber in ${possibleTerminals[@]}; do
+				if [[ ! "${terminalNumber}" =~ pts|tty ]]; then
+					continue
+				fi
+				terminalNumber=$(echo $terminalNumber | tr -d ' ')
+				terminalList="${terminalList}/dev/${terminalNumber} "
+			done
+			terminalLocation="${terminalLocation}${terminalList[@]}"
+		fi
+	done
+
+	#make sure all the devices specified are writable
+	writableDeviceList="${terminalLocation}"
+	terminalLocation=
+	for writableDevice in $writableDeviceList; do
+		if [[ ! -c $writableDevice ]]; then
+			continue
+		fi
+		terminalLocation="${terminalLocation}${writableDevice} "
+	done
+
+	#use only unique terminals
+	terminalLocation=$(echo "${terminalLocation[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+
+	#make sure there are devices to write to
+	if [[ -z "${terminalLocation}" ]]; then
+		printf "The specified user[s]/device[s] do not exist.\n"
+		return 1
+	fi
+
+	#print all devices
+	printf "Message sent to %s\nMessage content: " "$terminalLocation"
+	printf \
+		"\n%s\n${message}\n%s\n" \
+		"------ start message from $USER ------" \
+		"------ close message from $USER ------" \
+		| tee $terminalLocation
+}
+
+formatText()
+{
+	#declarations
+	local formattingCodes=
+	local formattedString="$1"
+	local resetFormatting="$3"
+	 
+	#parse list of formatting codes
+	for code in "$@"; do
+		if [[ "$code" = "$formattedString" ]]; then
+			#this is the string we want to format, so we don't need it
+			continue
+		fi
+			#
+			if [[ -z $formattingCodes ]]; then
+				formattingCodes="${code}"
+			else
+				formattingCodes="${formattingCodes};${code}"
+			fi
+	done
+
+	formattedString="\e[${formattingCodes}m${formattedString}"
+	if [[ -z "$resetFormatting" ]]; then
+		formattedString="${formattedString}\e[2${formattingCodes}m"
+	fi
+
+	printf "%s" $formattedString
+}
+ 
+colorizeText()
+{
+	local colorCode=$1
+	local colorizedString="\e[38;5;${colorCode}m$2"
+	local resetColorization="$3"
+	local colorResetCode="\e[0m"
+
+	#if the user doesn't want a color reset
+	if [[ -z "${resetColorization}" ]]; then
+		colorizedString="${colorizedString}${colorResetCode}"
+	fi
+
+	printf "%s" $colorizedString
+}
+ 
+colorizeBackground()
+{
+	local colorCode=$1
+	local colorizedString="\e[48;5;${colorCode}m$2"
+	local resetColorization="$3"
+	local colorResetCode="\e[0m"
+
+	#if the user doesn't want a color reset
+	if [[ -z "${resetColorization}" ]]; then
+		colorizedString="${colorizedString}${colorResetCode}"
+	fi
+
+	printf "%s" $colorizedString
+}
+ 
+displayCurrentPathInformation()
+{
+	if [[ "$(pwd)" = "$HOME" ]]; then
+		#currently in home directory
+		#no need to display this information
+		return
+	fi
+	printf "%s[PWD:\w]\n" $LEFT_CONTINUE_PROMPT
+}
+ 
+createPrompt()
+{
+	if [[ $? -ne 0 ]]; then
+		lastCommandStatus="NG"
+	else
+		lastCommandStatus="OK"
+	fi
+ 
+	calculatePadding()
+	{
+		local currentLineLength=$1
+		currentLineLength=${#currentLineLength}
+		local padding=$((COLUMNS - currentLineLength))
+		return padding
+	}
+ 
+	#constants
+	LIGHT_BACKGROUNDS=(2 3 4 5 6 7 9 10 11 13 14)
+	PLACEHOLDER="XoX"
+	TERMINAL_WIDTH=${COLUMNS}
+	TERMINAL_NAME=$(tty)
+	START_END="+-"
+	CONTINUE_PROMPT="|-"
+	 
+	#last command code
+	lastCommandStatus=$(colorizeText 16 $lastCommandStatus)
+	#the check on this is regex because it has formatting text on it
+	if [[ $lastCommandStatus =~ NG ]]; then
+		lastCommandStatus=$(colorizeBackground 196 $lastCommandStatus)
+	else
+		lastCommandStatus=$(colorizeBackground 46 $lastCommandStatus)
+	fi
+	 
+	#declarations
+	terminalInformation=
+	terminalColor="\e[48;5;"$(basename $TERMINAL_NAME)"m"
+	 
+	backgroundColor=$(basename $TERMINAL_NAME)
+	for lightBackgrounds in "${LIGHT_BACKGROUNDS[@]}"; do
+		if [[ $backgroundColor -eq $lightBackgrounds ]]; then
+			terminalColor="${terminalColor}\e[38;5;0m"
+			break
+		fi
+	done
+	workingDirectoryInformation=
+	linePadding=
+	 
+	userNameHostName=
+	userName=$(whoami)
+	if [[ $userName = "root" ]]; then
+		userNameHostName=$(colorizeText 255 "!\u!")
+		userNameHostName="[$(colorizeBackground 160 $userNameHostName)${terminalColor}@\h]"
+	else
+		userNameHostName="[\u@\h]"
+	fi
+	 
+	PROMPT_HEADER="$terminalColor$START_END[$lastCommandStatus$terminalColor:\!]-[\t]-$userNameHostName-[$TERMINAL_NAME]\n"
+	linePadding=$?
+	 
+	COMMAND_LINE="$START_END> \$ "
+	 
+	 
+	CURRENT_WORKING_DIRECTORY="$(displayCurrentPathInformation)"
+	if [[ -n $CURRENT_WORKING_DIRECTORY ]]; then
+		CURRENT_WORKING_DIRECTORY="$CURRENT_WORKING_DIRECTORY\n"
+	fi
+	
+	#git saftey check
+	type __git_ps1 | grep -q "function" #means silent grep return 0 on first match
+	if [[ $? -eq 0 ]]; then
+	 	GIT_INFORMATION=$(__git_ps1 "[GIT REPOSITORY STATUS:%s]")
+		if [[ -n "$GIT_INFORMATION" ]]; then
+			GIT_INFORMATION="${LEFT_CONTINUE_PROMPT}${GIT_INFORMATION}\n"
+		fi
+	else
+		GIT_INFORMATION=
+	fi 
+
+	export PS1=$(printf "%s%s%s%s" \
+		"$PROMPT_HEADER" \
+		"$CURRENT_WORKING_DIRECTORY" \
+		"$GIT_INFORMATION" \
+		"$COMMAND_LINE" \
+	)
+}
+
+export -f checkFileUpdateStatus
+export -f formatText
+export -f colorizeText
+export -f colorizeBackground
+export -f createPrompt
+export -f shell.reload
+export -f shell.messageTerminal
+export -f displayCurrentPathInformation
+export PROMPT_COMMAND=createPrompt
